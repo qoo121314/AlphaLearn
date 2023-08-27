@@ -8,8 +8,8 @@ gplearn.genetic.SymbolicRegressor and gplearn.genetic.SymbolicTransformer."""
 
 from sklearn.utils.estimator_checks import check_estimator
 
-from gplearn.genetic import SymbolicClassifier, SymbolicRegressor
-from gplearn.genetic import SymbolicTransformer
+from vtlearn.genetic import SymbolicClassifier, SymbolicRegressor
+from vtlearn.genetic import SymbolicTransformer
 
 
 def test_sklearn_regressor_checks():

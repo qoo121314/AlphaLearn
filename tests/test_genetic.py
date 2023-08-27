@@ -25,14 +25,14 @@ from sklearn.utils._testing import assert_array_almost_equal
 from sklearn.utils._testing import assert_raises
 from sklearn.utils.validation import check_random_state
 
-from gplearn.genetic import SymbolicClassifier, SymbolicRegressor
-from gplearn.genetic import SymbolicTransformer
-from gplearn.fitness import weighted_pearson, weighted_spearman
-from gplearn._program import _Program
-from gplearn.fitness import _fitness_map
-from gplearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
+from vtlearn.genetic import SymbolicClassifier, SymbolicRegressor
+from vtlearn.genetic import SymbolicTransformer
+from vtlearn.fitness import weighted_pearson, weighted_spearman
+from vtlearn._program import _Program
+from vtlearn.fitness import _fitness_map
+from vtlearn.functions import (add2, sub2, mul2, div2, sqrt1, log1, abs1, max2,
                                min2)
-from gplearn.functions import _Function
+from vtlearn.functions import _Function
 
 # load the diabetes dataset and randomly permute it
 rng = check_random_state(0)
