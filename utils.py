@@ -74,3 +74,26 @@ def _partition_estimators(n_estimators, n_jobs):
     starts = np.cumsum(n_estimators_per_job)
 
     return n_jobs, n_estimators_per_job.tolist(), [0] + starts.tolist()
+
+def GenerateDataByDataFrame(data, tgt, sequence_col=[], group_col=[]):
+    X = []
+    Y = []
+
+    for index, rows in data.groupby('Pid'):
+        tmp = rows.sort_values(sequence_col)
+        tmp = np.array(tmp.drop([tgt]+sequence_col+group_col,axis=1))
+        tmp = tmp[:,:,np.newaxis]
+        X.append(tmp)
+
+    for index, rows in data.groupby('Pid'):
+        tmp = rows.sort_values(sequence_col)
+        tmp = np.array(tmp[tgt]).reshape(-1,1)
+        tmp = tmp[:,:,np.newaxis]
+        Y.append(tmp)
+    
+    X = np.concatenate(X,axis=2)
+    Y = np.concatenate(Y,axis=2)[:, 0, :]
+
+    return X, Y
+
+

@@ -124,7 +124,7 @@ def _weighted_spearman(y, y_pred, w):
 
 def _mean_absolute_error(y, y_pred, w):
     """Calculate the mean absolute error."""
-    return np.average(np.abs(y_pred - y), weights=w)
+    return np.average(np.average(np.abs(y_pred - y), weights=w, axis=0))
 
 
 def _mean_square_error(y, y_pred, w):

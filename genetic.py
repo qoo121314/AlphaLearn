@@ -37,7 +37,7 @@ MAX_INT = np.iinfo(np.int32).max
 
 def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
     """Private function used to build a batch of programs within a job."""
-    n_samples, n_features = X.shape
+    n_samples, n_features, n_group = X.shape
     # Unpack parameters
     tournament_size = params['tournament_size']
     function_set = params['function_set']
@@ -132,7 +132,7 @@ def _parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
 
         # Draw samples, using sample weights, and then fit
         if sample_weight is None:
-            curr_sample_weight = np.ones((n_samples,))
+            curr_sample_weight = np.ones((n_samples, n_group))
         else:
             curr_sample_weight = sample_weight.copy()
         oob_sample_weight = curr_sample_weight.copy()
@@ -284,32 +284,44 @@ class BaseSymbolic(BaseEstimator, metaclass=ABCMeta):
         """
         random_state = check_random_state(self.random_state)
 
-        # Check arrays
+        # Check arrays - basic shape
+        if len(X.shape) != 3 :
+            raise ValueError(f"X shape is {X.shape}, it should be (x, y, z)")
+        
+        if len(y.shape) != 2 :
+            raise ValueError(f"Y shape is {y.shape}, it should be (x, z)")
+        
+        if X.shape[-1] != y.shape[-1] : 
+            raise ValueError(f"Y shape is {y.shape}, the last axis should be related to X {X.shape}")
+    
         if sample_weight is not None:
-            sample_weight = _check_sample_weight(sample_weight, X)
+            if y.shape != sample_weight.shape :
+                raise ValueError(f"Sample Weight shape {sample_weight.shape} should be as same as Y shape {y.shape}")
 
-        if isinstance(self, ClassifierMixin):
-            X, y = self._validate_data(X, y, y_numeric=False)
-            check_classification_targets(y)
+        # Check arrays - by model form
+        for i in range(y.shape[-1]):
+            if isinstance(self, ClassifierMixin):
+                X[:,:,i], y = self._validate_data(X[:,:,i], y[:,i], y_numeric=False)
+                check_classification_targets(y[:,i])
 
-            if self.class_weight:
-                if sample_weight is None:
-                    sample_weight = 1.
-                # modify the sample weights with the corresponding class weight
-                sample_weight = (sample_weight *
-                                 compute_sample_weight(self.class_weight, y))
+                if self.class_weight:
+                    if sample_weight is None:
+                        sample_weight = 1.
+                    # modify the sample weights with the corresponding class weight
+                    sample_weight = (sample_weight *
+                                    compute_sample_weight(self.class_weight, y[:,i]))
 
-            self.classes_, y = np.unique(y, return_inverse=True)
-            n_trim_classes = np.count_nonzero(np.bincount(y, sample_weight))
-            if n_trim_classes != 2:
-                raise ValueError("y contains %d class after sample_weight "
-                                 "trimmed classes with zero weights, while 2 "
-                                 "classes are required."
-                                 % n_trim_classes)
-            self.n_classes_ = len(self.classes_)
+                self.classes_, y[:,i] = np.unique(y[:,i], return_inverse=True)
+                n_trim_classes = np.count_nonzero(np.bincount(y[:,i], sample_weight))
+                if n_trim_classes != 2:
+                    raise ValueError("y contains %d class after sample_weight "
+                                    "trimmed classes with zero weights, while 2 "
+                                    "classes are required."
+                                    % n_trim_classes)
+                self.n_classes_ = len(self.classes_)
 
-        else:
-            X, y = self._validate_data(X, y, y_numeric=True)
+            else:
+                X[:,:,i], y[:,i] = self._validate_data(X[:,:,i], y[:,i], y_numeric=True)
 
         hall_of_fame = self.hall_of_fame
         if hall_of_fame is None:
